@@ -19,27 +19,36 @@ actually be asked, because there is something to compare against.
 
 ## Relationship to configuration-as-code
 
-Both are declarative and they overlap, so the boundary needs to be explicit.
-A first cut:
+The CMDB is not only a host list. Applications and services are configuration
+items too: AAP itself, its version, which hosts it runs on, its components and
+endpoints, and its relationships to the systems it manages and integrates with.
+The same applies to the other platforms in the estate.
 
-| Concern | Lives in | Example |
+So the boundary is a layer boundary, not a subject boundary. The CMDB declares
+*that a thing exists, where, in which version, and how it relates to everything
+else*. Configuration-as-code implements *the inside of that thing*, and does so
+downstream of the record rather than beside it.
+
+| Layer | Owns | Example |
 |---|---|---|
-| Which hosts exist and how to reach them | CMDB | identities, roles, lifecycle, interfaces, MACs, addresses, AAP connection settings |
-| What the platform itself is configured with | CaC | job templates, projects, credentials, credential types, organizations |
-| How a change is actually performed | Deployment playbooks | create the VM, configure the network, install the product |
+| CMDB | Existence, placement, version, endpoints, relationships, lifecycle | AAP 2.7 runs on these hosts, serves this URL, manages these endnodes, integrates with ServiceNow and Zabbix |
+| CaC | The internal configuration of a declared item | AAP's organizations, projects, job templates, credentials, inventories |
+| Deployment playbooks | The act of making reality match | install AAP, create the VM, configure the network |
 
-So the deployment playbooks are the consumers: they take *what* from the CMDB
-and *how* from their own content, while CaC defines the AAP objects that launch
-them. The part of CaC that is genuinely CMDB-derived is the inventory — hosts,
-groups and per-host variables — which should be generated from the record
-rather than maintained separately.
+Which makes CaC a consumer of the record in two ways, not one: the inventory it
+manages is CMDB-derived, and so are the facts about the platform it configures —
+hostnames, URLs, versions, integration endpoints.
 
-- [ ] Confirm or correct that boundary, then write it down somewhere the other
-      projects can reference.
-- [ ] Generate AAP inventory content from the CMDB instead of hand-maintaining
-      it, and decide whether that is a sync job or a dynamic inventory source.
-- [ ] Identify CaC variables that are really host facts and should move to the
-      CMDB.
+- [ ] Model applications and services as configuration items alongside hosts,
+      with relationships between them, not just a flat host list.
+- [ ] Decide the CI classes needed — host, application, service, network,
+      integration — and keep that list small enough to maintain.
+- [ ] Generate AAP inventory content from the CMDB rather than hand-maintaining
+      it; decide whether that is a sync job or a dynamic inventory source.
+- [ ] Identify CaC variables that are really CMDB facts — platform hostnames,
+      URLs, versions, integration endpoints — and source them from the record.
+- [ ] Decide what stays genuinely CaC-only: object definitions that express
+      intent about behaviour rather than facts about the estate.
 
 ## Define the record
 
